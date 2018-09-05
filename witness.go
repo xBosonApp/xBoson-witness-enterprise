@@ -49,6 +49,7 @@ var c *Config
 
 
 func main() {
+	defer CloseAllBlockDB()
 	ls := Logset{}
 	setLoggerFile(&ls)
 	c = new(Config)
@@ -251,15 +252,31 @@ func sign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(signature)
-	log("Sign", signature)
+	log("Sign", base64.StdEncoding.EncodeToString(signature))
 }
 
 
 func deliver(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	w.WriteHeader(200)
+	chain := r.Header.Get("chain")
+	channel := r.Header.Get("channel")
+	db, err := OpenBlockDB(chain, channel)
+	if (err != nil) {
+		log("Open DB fail", err)
+		w.WriteHeader(500)
+		return
+	}
+
 	json, _ := ioutil.ReadAll(r.Body)
-	log("Block", string(json))
+	id, err1 := db.Put(json)
+	if err1 != nil {
+		log("DB insert fail", err1)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.WriteHeader(200)
+	log("Deliver", chain, channel, id)
 }
 
 

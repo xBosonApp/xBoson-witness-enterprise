@@ -2,6 +2,8 @@
 
 go1.10.1 或更高版本编译:
 
+`go get github.com/HouzuoGuo/tiedot`
+
 `go build`
 
 

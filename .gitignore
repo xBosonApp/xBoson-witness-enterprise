@@ -2,3 +2,4 @@
 *.log
 *.bat
 witness-config*.json
+blockdb
