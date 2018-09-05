@@ -3,3 +3,4 @@
 *.bat
 witness-config*.json
 blockdb
+logs

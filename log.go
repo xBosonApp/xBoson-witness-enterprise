@@ -7,8 +7,13 @@ import (
 	"strconv"
 )
 
-const TFORMAT = "2006-01-02 15H"
-const LOG_FILE_MAX_LINE = 10000
+const (
+	TFORMAT = "2006-01-02 15H"
+	LOG_FILE_MAX_LINE = 10000
+	LOG_DIR = "logs/"
+	LOG_EXT = ".log"
+)
+
 var log_count = 0
 var show_log_console = true
 
@@ -52,11 +57,13 @@ func setLoggerFile(ls *Logset) {
 		ls.File = nil
 	}
 
-	ls.FileName = time.Now().Format(TFORMAT);
+	os.Mkdir(LOG_DIR, 600)
+
+	ls.FileName = LOG_DIR + time.Now().Format(TFORMAT);
 	if (log_count > 0) {
 		ls.FileName += "."+ strconv.Itoa(log_count)
 	}
-	ls.FileName += ".log"
+	ls.FileName += LOG_EXT
 	log_count++
 
 	file, err := os.OpenFile(ls.FileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0700)
