@@ -4,36 +4,30 @@ import (
 	"net/http"
 	"strconv"
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"flag"
-	"os"
 	"encoding/json"
 	"net/url"
-	"net"
 	"fmt"
 	"io"
 	"io/ioutil"
-
-	x 			"crypto/x509"
-	logger 	"log"
+	"flag"
+	logger "log"
 )
-
-type Config struct {
-	PrivateKey 	string
-	Port 				int
-	Host        string
-	URLxBoson 	string
-	ID          string
-}
 
 type Ret struct {
 	Code int     `json:"code"` 
 	Msg  string  `json:"msg"` 
 	Id   string  `json:"id"` 
 	Data string  `json:"data"`
+}
+
+type BlockQuery struct {
+	key     string
+	chain   string
+	channel string
+	c       int			// 这个变量防止启动多个全链检查
 }
 
 const url_perfix  = "witness/"
@@ -46,6 +40,8 @@ var prikey *ecdsa.PrivateKey
 var configFile = flag.String("c", def_config, "Witness default Config File");
 var xboson_url_base string
 var c *Config
+var requestBlockChan chan BlockQuery = make(chan BlockQuery, 1024)
+var block_count = 0
 
 
 func main() {
@@ -83,6 +79,8 @@ func main() {
 		go doChange()
 	}
 
+	go readRequestThread()
+
 	log("Witness peer start, Http Server start")
 	log("Http Port", c.Port)
 	log("Http Path", sign_url)
@@ -101,8 +99,12 @@ func doReg() {
 	p.Set("urlperfix",  url_perfix)
 
 	log("Do register to xBoson platform")
-	ret := callHttp("register", &p)
+	ret, err := callHttp("register", &p)
+	if err != nil {
+		return
+	}
 	if ret.Code != 0 {
+		// 失败就退出
 		logger.Fatalln("Register fail", ret.Code, ret.Msg, ret.Data)
 	}
 
@@ -120,18 +122,42 @@ func doChange() {
 	p.Set("id",					c.ID)
 
 	log("Do change to xBoson")
-	ret := callHttp("change", &p)
+	ret, err := callHttp("change", &p)
+	if err != nil {
+		return
+	}
 	log("Change ID =", c.ID, ", code =", ret.Code, ", message =", ret.Msg, ret.Data)
 	if ret.Code != 0 {
-		logger.Fatalln("Change fail")
+		// 失败就退出
+		logger.Fatalln("Change fail", ret.Msg)
 	}
 }
 
 
-func callHttp(api string, parm *url.Values) *Ret {
+func doRequestBlock(chain, channel string, begin, end *string) {
+	p := url.Values{}
+	p.Set("id", 			c.ID)
+	p.Set("chain", 		chain)
+	p.Set("channel", 	channel)
+	p.Set("begin", 		*begin)
+	p.Set("end", 			*end)
+
+	log("Do request block", *begin, "-", *end)
+	ret, err := callHttp("reqb", &p)
+	if err != nil {
+		return
+	}
+	if ret.Code != 0 {
+		log("Request fail", ret.Msg)
+	}
+}
+
+
+func callHttp(api string, parm *url.Values) (*Ret, error) {
 	res, err := http.Get(xboson_url_base + api +"?"+ parm.Encode())
 	if err != nil {
-		logger.Fatalln("Http fail", err)
+		log("Http fail", err)
+		return nil, err
 	}
 	defer res.Body.Close()
 
@@ -139,88 +165,10 @@ func callHttp(api string, parm *url.Values) *Ret {
 	dec := json.NewDecoder(res.Body)
 	err = dec.Decode(&ret)
 	if (err != nil) {
-		logger.Fatalln("Parse Json fail", err)
+		log("Parse Json fail", err)
+		return nil, err
 	}
-	return &ret
-}
-
-
-func loadConfig() {
-	flag.Parse()
-	log("Load config From:", *configFile)
-	file, err := os.Open(*configFile)
-	if err != nil {
-		log(err)
-		setConfigFromUser()
-		genKey()
-		saveConfig()
-		return
-	}
-	defer file.Close()
-
-	dec := json.NewDecoder(file)
-	err = dec.Decode(c)
-	if err != nil {
-		logger.Fatalln("Parse Config fail", err)
-	}
-	loadKey()
-}
-
-
-func saveConfig() {
-	file, err := os.OpenFile(*configFile, os.O_RDWR|os.O_CREATE, 0700)
-	if err != nil {
-		log("Open Config File fail", err)
-		return;
-	}
-	defer file.Close()
-
-	enc := json.NewEncoder(file)
-	enc.SetIndent("", "  ")
-	enc.Encode(c)
-	log("Save config to", *configFile)
-}
-
-
-func setConfigFromUser() {
-	fmt.Print("Input Http Port: ");
-	fmt.Scanf("%d\n", &c.Port)
-	fmt.Print("Input xBoson platform Adderss, [host:port]: ");
-	fmt.Scanf("%s\n", &c.URLxBoson)
-
-	if c.Port <= 0 { c.Port = 10080 }
-	if c.URLxBoson == "" { c.URLxBoson = "localhost:8080" }
-	log("xBoson Address:", c.URLxBoson);
-}
-
-
-func loadKey() {
-	bin, err := base64.StdEncoding.DecodeString(c.PrivateKey)
-	if err != nil {
-		logger.Fatalln("Decode Private Key fail")
-	}
-	pri, err := x.ParseECPrivateKey(bin)
-	if err != nil {
-		logger.Fatalln("Parse Private key fail")
-	}
-	setGlbKey(pri)
-	log("Load Key from config file")
-}
-
-
-func genKey() {
-	pri, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		logger.Fatalln("Cannot create key pair", err)
-	}
-	setGlbKey(pri)
-	log("Generate New Key")
-
-	bin, err := x.MarshalECPrivateKey(pri)
-	if err != nil {
-		logger.Fatalln("Cannot Marshal EC private key", err)
-	}
-	c.PrivateKey = base64.StdEncoding.EncodeToString(bin)
+	return &ret, nil
 }
 
 
@@ -260,6 +208,7 @@ func deliver(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	chain := r.Header.Get("chain")
 	channel := r.Header.Get("channel")
+	
 	db, err := OpenBlockDB(chain, channel)
 	if (err != nil) {
 		log("Open DB fail", err)
@@ -267,8 +216,21 @@ func deliver(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json, _ := ioutil.ReadAll(r.Body)
-	id, err1 := db.Put(json)
+	json_bin, _ := ioutil.ReadAll(r.Body)
+	obj := make(map[string]interface{})
+	if err := json.Unmarshal(json_bin, &obj); err != nil {
+		log("Deliver fail", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	if err := verify(obj); err != nil {
+		log("Deliver verify fail", err, string(json_bin))
+		w.WriteHeader(403)
+		return
+	}
+
+	id, err1 := db.Put(obj)
 	if err1 != nil {
 		log("DB insert fail", err1)
 		w.WriteHeader(500)
@@ -277,83 +239,60 @@ func deliver(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(200)
 	log("Deliver", chain, channel, id)
+	checkRelatedPutRequest(obj, db)
 }
 
 
-func findIpWithConfig() bool {
-	var isfind bool
+func readRequestThread() {
+	sync_all := false
+	show_c := 2
+	for {
+		b := <- requestBlockChan
 
-	getLocalIp(func (ip *net.IP) bool {
-		if c.Host == ip.String() {
-			isfind = true
-			return true
-		}
-		return false
-	})
-	return isfind
-}
-
-
-func findIpWithStdin() {
-	getLocalIp(func (ip *net.IP) bool {
-		var cf int
-		fmt.Print("Local IP is: ", ip, " ? (y/N) ")
-		fmt.Scanf("%c\n", &cf)
-		if cf == 'y' {
-			c.Host = ip.String()
-			saveConfig()
-			return true;
-		}
-		return false
-	})
-}
-
-
-/**
- * 如果 setter 返回 true, 则终止 ip 地址的便利
- */
-func getLocalIp(setter func(*net.IP) bool) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		logger.Fatalln("Cannot get Network Interfaces", err)
-	}
-	
-	for _, i := range ifaces {
-		addrs, err := i.Addrs()
+		db, err := OpenBlockDB(b.chain, b.channel)
 		if err != nil {
-			logger.Fatalln("Cannot get Network Address", err)
+			log("Open DB with Push request fail", err)
 		}
-		
-		for _, addr := range addrs {
-			var ip net.IP
-			// log("addr=", addr)
-			switch v := addr.(type) {
-				case *net.IPNet:
-								ip = v.IP
-				case *net.IPAddr:
-								ip = v.IP
-			}
-			if ip != nil 				&&
-				 ip.To4() != nil 	&&
-				 !ip.IsLoopback() &&
-				 !ip.IsUnspecified() {
-				if setter(&ip) {
-					return
+
+		find, err := db.Get(b.key)
+		if err != nil {
+			log("Push request fail", err)
+			continue
+		}
+
+		//
+		// BUG: 如果链中出现一段A空洞接着有一个block接着有空洞B, 空洞B无法填充
+		//
+		if find != nil { 
+			if !sync_all && b.c == 0 {
+				if pkey, ok := find["previousKey"].(string); ok && len(pkey) > 0 {
+					block_count++
+					if block_count % show_c == 0 {
+						log("synchroized", pkey, block_count, "...")
+						show_c = show_c << 1
+					}
+					requestBlockChan <- BlockQuery{ pkey, b.chain, b.channel, 0 }
+				} else {
+					sync_all = true
+					log("Synchroized", block_count, "Blocks")
 				}
 			}
+			continue 
 		}
+
+		var last *string
+		if db.lastid != 0 {
+			last = &b.key
+		}
+		doRequestBlock(b.chain, b.channel, &b.key, last)
 	}
 }
 
 
-/**
- * http://www.ietf.org/rfc/rfc5480.txt
- * http://www.rfc-base.org/txt/rfc-5480.txt
- */
-func getPublicKeyStr(key *ecdsa.PublicKey) string {
-	bin, err := x.MarshalPKIXPublicKey(key)
-	if err != nil {
-		logger.Fatalln("Cannot Stringify Public Key,", err)
+func checkRelatedPutRequest(b map[string]interface{}, db *Blockdb) {
+	pkey, ok := b["previousKey"].(string)
+	if !ok || len(pkey) <= 0 {
+		return
 	}
-	return base64.StdEncoding.EncodeToString(bin)
+	requestBlockChan <- BlockQuery{ pkey, db.chain, db.channel, block_count }
 }
