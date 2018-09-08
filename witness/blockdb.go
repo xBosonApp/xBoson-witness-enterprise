@@ -1,4 +1,4 @@
-package main
+package witness
 
 import (
 	"github.com/HouzuoGuo/tiedot/db"

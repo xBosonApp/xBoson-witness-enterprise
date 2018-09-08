@@ -1,4 +1,4 @@
-package main
+package witness
  
 import (
 	"net/http"
@@ -44,7 +44,7 @@ var requestBlockChan chan BlockQuery = make(chan BlockQuery, 1024)
 var block_count = 0
 
 
-func main() {
+func StartWitnessProgram() {
 	defer CloseAllBlockDB()
 	ls := Logset{}
 	setLoggerFile(&ls)
