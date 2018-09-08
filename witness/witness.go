@@ -30,9 +30,9 @@ type BlockQuery struct {
 	c       int			// 这个变量防止启动多个全链检查
 }
 
-const url_perfix  = "witness/"
-const sign_url    = "/"+ url_perfix +"sign"
-const deliver_url = "/"+ url_perfix +"deliver"
+const URL_prefix  = "witness/"
+const sign_url    = "/"+ URL_prefix +"sign"
+const deliver_url = "/"+ URL_prefix +"deliver"
 const def_config  = "witness-config.json"
 
 var pubkeystr string
@@ -96,7 +96,7 @@ func doReg() {
 	p.Set("publickey",  pubkeystr)
 	p.Set("host", 			c.Host)
 	p.Set("port", 			strconv.Itoa(c.Port))
-	p.Set("urlperfix",  url_perfix)
+	p.Set("urlperfix",  URL_prefix)
 
 	log("Do register to xBoson platform")
 	ret, err := callHttp("register", &p)
@@ -118,7 +118,7 @@ func doChange() {
 	p := url.Values{}
 	p.Set("host", 			c.Host)
 	p.Set("port", 			strconv.Itoa(c.Port))
-	p.Set("urlperfix",  url_perfix)
+	p.Set("urlperfix",  URL_prefix)
 	p.Set("id",					c.ID)
 
 	log("Do change to xBoson")

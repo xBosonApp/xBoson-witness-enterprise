@@ -20,6 +20,7 @@ type Config struct {
 	Host        string
 	URLxBoson 	string
 	ID          string
+	Pass        string
 }
 
 func loadConfig() {
@@ -31,6 +32,7 @@ func loadConfig() {
 		setConfigFromUser()
 		genKey()
 		saveConfig()
+		genPass()
 		return
 	}
 	defer file.Close()
@@ -111,4 +113,16 @@ func genKey() {
 		logger.Fatalln("Cannot Stringify Public Key,", err)
 	}
 	return base64.StdEncoding.EncodeToString(bin)
+}
+
+
+func genPass() {
+	b := make([]byte, 10)
+	rand.Read(b)
+	c.Pass = base64.RawURLEncoding.EncodeToString(b)
+}
+
+
+func GetPass() string {
+	return c.Pass
 }
