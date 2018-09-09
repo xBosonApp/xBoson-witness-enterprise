@@ -2,10 +2,12 @@
 
 go1.10.1 或更高版本编译:
 
-`go get github.com/HouzuoGuo/tiedot`
-
-`go build`
-
+```sh
+go get github.com/HouzuoGuo/tiedot
+go get github.com/kataras/go-sessions
+go get github.com/gorilla/securecookie
+go build
+```
 
 启动:
 

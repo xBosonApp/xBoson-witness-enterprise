@@ -1,0 +1,28 @@
+* {
+  margin: 0;
+}
+.loginform {
+  margin-left: auto; margin-right: auto; width: 400px; margin-top: 300px;
+}
+.flex {
+  display: inline-flex; flex-direction: row; width: 100%;
+}
+.fullrow {
+  width: 100%;
+}
+input {
+  margin-top: 10px; border: 0; border-bottom: 1px solid #999;
+}
+message {
+  display: inline-block;
+}
+.logo {
+  position: fixed; bottom: 20px; text-align: right; font-size: 8px;
+  border-top: 1px solid #999; width: 100%; opacity: 0.5;
+}
+.logo div {
+  margin-right: 10px; margin-top: 5px;
+}
+.logo b {
+  color: red;
+}

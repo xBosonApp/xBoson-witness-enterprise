@@ -86,6 +86,10 @@ func StartWitnessProgram() {
 	log("Http Path", sign_url)
 	http.HandleFunc(sign_url, sign)
 	http.HandleFunc(deliver_url, deliver)
+}
+
+
+func StartHttpServer() {
 	http.ListenAndServe(":"+ strconv.Itoa(c.Port), nil)
 }
 

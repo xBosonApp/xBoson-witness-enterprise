@@ -1,6 +1,7 @@
 package witness
 
 import (
+	"strconv"
 	"crypto/elliptic"
 	"os"
 	"flag"
@@ -125,4 +126,9 @@ func genPass() {
 
 func GetPass() string {
 	return c.Pass
+}
+
+
+func GetHttpHost() string {
+	return c.Host +":"+ strconv.Itoa(c.Port)
 }
