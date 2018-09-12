@@ -5,9 +5,48 @@
       <title>Witness Node - Enterprise for xBoson</title>
       <link rel="stylesheet" href=".css" />
       <script src="jquery-3.3.1.min.js"></script>
+      <script src="base64.min.js"></script>
       <script src=".js"></script>
   </head>
-  <body>
-    data
+  <body style='padding: 30px 60px;'>
+    <h1 style='border-bottom: 1px solid #111'>区块链</h1>
   </body>
+
+  <div class='flex' style='min-height: 600px'>
+    <div class='halfwidth'>
+      <section id='chain_list' class=''>
+        <h2>链列表</h2>
+        <ul class='content'>
+        </ul>
+      </section>
+
+      <section id='channel_list' class='hide'>
+        <h2>通道列表</h2>
+        <ul class='content'>
+        </ul>
+      </section>
+
+      <section id='block_list' class='hide'>
+        <h2>区块列表</h2>
+        <ul class='content'>
+        </ul>
+        <div class='content page_ctrl'>
+          <input id='input_key' size='32'/><a href='#' id='search_block'>查询</a>
+          <a href='' id='current_page'>最新</a>
+          <a href='' id='next_page'>下一页</a>
+        </div>
+      </section>
+    </div>
+
+    <div class='halfwidth' style='margin-left: 20px'>
+      <section id='block_info' class='hide'>
+        <h2>块信息</h2>
+        <ul class='content'>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <div id='log'></div>
+
 </html>

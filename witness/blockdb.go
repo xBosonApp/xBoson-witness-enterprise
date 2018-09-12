@@ -30,6 +30,7 @@ type Blockdb struct {
 
 var dblock *sync.Mutex = &sync.Mutex{}
 var dbcache map[string]*Blockdb = make(map[string]*Blockdb)
+var BlockMsg = Message{}
 
 
 //
@@ -116,6 +117,7 @@ func (b* Blockdb) Put(obj map[string]interface{}) (int, error) {
 	if _, err := b.meta.WriteAt([]byte(strconv.Itoa(b.lastid)), 0); err != nil {
 		log("Write last id fail", err)
 	}
+	BlockMsg.Send("New Block", obj["key"], obj["hash"], docID)
 	return docID, nil
 }
 

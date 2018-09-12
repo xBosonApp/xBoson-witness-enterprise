@@ -178,6 +178,11 @@ func int64bytes(l uint64) []byte {
 }
 
 
+func ReadBlockFrom(b map[string]interface{}, block *Block) (error) {
+	return readBlockFrom(b, block)
+}
+
+
 func readBlockFrom(b map[string]interface{}, block *Block) (error) {
 	var e error
 	var ok bool

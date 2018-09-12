@@ -1,5 +1,5 @@
 * {
-  margin: 0;
+  margin: 0; word-break: break-all;
 }
 .loginform {
   margin-left: auto; margin-right: auto; width: 400px; margin-top: 300px;
@@ -25,4 +25,66 @@ message {
 }
 .logo b {
   color: red;
+}
+section {
+  margin: 20px 0;
+}
+ul {
+  padding: 5px 0
+}
+li {
+  list-style-type: none; border-bottom: 1px solid #ddd;
+}
+a {
+  text-decoration: none; color: #777;
+}
+li a {
+  font-size: 10px;
+}
+.select {
+  color: #111; font-weight: bold;
+}
+#block_info .name {
+  width: 200px; color: #393696;
+}
+#block_info .value {
+  word-break: break-all; width: 100%; white-space: pre-wrap;
+}
+.halfwidth {
+  width: 50%;
+}
+.hide {
+  display: none;
+}
+.sign_id {
+  color: #33f; font-weight: bold;
+}
+.sign_ct {
+  margin-bottom: 9px; 
+}
+h2 {
+  margin: 50px 0 10px 0; padding: 8px 50px;
+  border-radius: 5px; background: #9c7438; color: #fff; font-size: 15px;
+}
+.content {
+  padding-left: 50px;
+}
+.content .value {
+  font-size: 9px;
+}
+.page_ctrl {
+  text-align: right;
+}
+.page_ctrl a {
+  display: inline; margin-left: 10px;
+}
+#log {
+  border-top: 1px solid #111; min-height: 1px; margin-top: 40px;
+  max-height: 9em; overflow-y: auto; font-size: 10px;
+}
+#log .date {
+  color: #999;
+}
+#log .content {
+  color: #777;
 }

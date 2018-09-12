@@ -51,6 +51,11 @@ func log(a ...interface{}) {
 }
 
 
+func Log(a ...interface{}) {
+	log(a...)
+}
+
+
 func setLoggerFile(ls *Logset) {
 	if ls.File != nil {
 		ls.Close()
