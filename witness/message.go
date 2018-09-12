@@ -43,12 +43,19 @@ func (m *Message) Send(a ...interface{}) {
 
 //
 // 读取最新的消息, 没有新消息返回 nil
+// 多个节点请求消息将产生竞争, 调用者自己记录读取计数器
+// 当 log_read_count <= 0 将使用默认计数器作为读取计数器当前值.
+// 返回未读取的所有消息, 并返回一个读取计数器值用于下一次读取.
 //
-func (m *Message) Read() ([][]interface{}) {
+func (m *Message) Read(log_read_count int) ([][]interface{}, int) {
 	m.log_safe.Lock()
 	defer m.log_safe.Unlock()
 
-	if m.log_read_count < m.log_write_count {
+	if (log_read_count <= 0) {
+		log_read_count = m.log_read_count
+	}
+
+	if log_read_count < m.log_write_count {
 		var ret = make([][]interface{}, 0)
 
 		for i:=1; i<LOG_STACK_LEN; i++ {
@@ -59,13 +66,13 @@ func (m *Message) Read() ([][]interface{}) {
 			if m.log_stack[p] == nil {
 				break;
 			}
-			if m.log_read_count <= m.log_stack[p].id {
+			if log_read_count <= m.log_stack[p].id {
 				ret = append(ret, m.log_stack[p].log)
-				m.log_stack[p] = nil
+				// m.log_stack[p] = nil
 			}
 		}
 		m.log_read_count = m.log_write_count
-		return ret;
+		return ret, m.log_write_count
 	}
-	return nil
+	return nil, 0
 }

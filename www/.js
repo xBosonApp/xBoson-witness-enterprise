@@ -2,6 +2,7 @@ jQuery(function($) {
 
 $('.smartform').each(smartForm);
 $("#server_info").each(get_server_info);
+$("#logout").click(logout);
 var jlog = $("#log");
 
 if (jlog.length > 0) {
@@ -111,6 +112,7 @@ function showBlock(block, requestBlocksFunc, parm) {
     } else {
       val = block[n];
     }
+    
     if (name && val) {
       var li = $("<li class='flex'>").appendTo(root);
       li.append($("<div class='name'>").html(name));
@@ -119,6 +121,11 @@ function showBlock(block, requestBlocksFunc, parm) {
   }
 
   function _show_block(key) {
+    var find = $('#'+ key);
+    if (find.length > 0) {
+      find.click();
+      return;
+    }
     requestBlocksFunc(key, function() {
       $('#'+ key).click();
     });
@@ -283,6 +290,13 @@ function get_server_info() {
         thiz.find('[k="'+ n +'"]').html(ret.data[n]);
       }
     }
+  });
+}
+
+
+function logout() {
+  call('logout', null, function(err, ret) {
+    relogin();
   });
 }
 

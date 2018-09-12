@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html>
-  <head>
-      <meta content="text/html; charset=utf-8" http-equiv="content-type" />
-      <title>Witness Node - Enterprise for xBoson</title>
-      <link rel="stylesheet" href=".css" />
-      <script src="jquery-3.3.1.min.js"></script>
-      <script src="base64.min.js"></script>
-      <script src=".js"></script>
-  </head>
-  <body style='padding: 30px 60px;'>
-    <h1 style='border-bottom: 1px solid #111'>见证者节点</h1>
-  </body>
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <title>Witness Node - Enterprise for xBoson</title>
+    <link rel="stylesheet" href=".css" />
+    <script src="jquery-3.3.1.min.js"></script>
+    <script src="base64.min.js"></script>
+    <script src=".js"></script>
+</head>
+<body style='padding: 30px 60px;'>
+  <h1 style='border-bottom: 1px solid #111'>
+    见证者节点 <a href='#' id='logout'>退出 X</a>
+  </h1>
 
   <ul id='server_info' class='content'>
     <li class='flex'>
       <div class='flex'>
-        <div class='name'>ID</div>
+        <div class='name'>见证者ID</div>
         <div class='value' k='id'></div>
       </div>
       <div class='flex'>
-        <div class='name'>xBoson</div>
+        <div class='name'>平台地址</div>
         <div class='value' k='xboson'></div>
       </div>
     </li>
 
     <li class='flex'>
       <div class='flex'>
-        <div class='name'>Host</div>
+        <div class='name'>本机地址</div>
         <div class='value' k='host'></div>
       </div>
       <div class='flex'>
-        <div class='name'>Public Key</div>
+        <div class='name'>签名公钥</div>
         <div class='value' k='publicKey'></div>
       </div>
     </li>
@@ -76,4 +77,5 @@
     <div id='log'></div>
   </div>
 
+</body>
 </html>

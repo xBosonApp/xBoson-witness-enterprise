@@ -234,19 +234,23 @@ func block(w Response, r *Request, s *Session) {
 
 
 func read_log(w Response, r *Request, s *Session) {
+	var ss = (*sessions.Session)(s)
 	var loglist [][]interface{}
 	end := time.Now().Add(10 * time.Second)
+	rc, _ := ss.GetInt("rc")
+
 	//
 	// 10秒内如果没有消息就返回 null, 否则立即返回记录, 或等待10秒
 	//
 	for end.After(time.Now())  {
-		loglist = witness.BlockMsg.Read()
+		loglist, rc = witness.BlockMsg.Read(rc)
 		if loglist != nil && len(loglist) > 0 {
 			break;
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
 	
+	ss.Set("rc", rc)
 	wjson(w, &Msg{ 0, "ok", loglist })
 }
 
