@@ -43,13 +43,13 @@ var sess *sessions.Sessions;
 
 
 func init() {
-	hashKey  := []byte("winess-2104nxk.zjfpeoq9203gh")
-	blockKey := []byte("winess-f32w3nvb,x.vo;so9wghlsd;[q")
-	secureCookie := securecookie.New(hashKey, blockKey)
+	secureCookie := securecookie.New(
+		securecookie.GenerateRandomKey(32), 
+		securecookie.GenerateRandomKey(16))
+
 	sess = sessions.New(sessions.Config{
 		Cookie: "witnesssessionid",
 		Expires: time.Hour * 2,
-		DisableSubdomainPersistence: false,
 		Encode: secureCookie.Encode,
 		Decode: secureCookie.Decode,
 	})
@@ -66,9 +66,10 @@ func StartWebService() {
 	HandleFunc("channel_list", 	channelList)
 	HandleFunc("get_block", 		block)
 	HandleFunc("read_log", 			read_log)
+	HandleFunc("info",					servier_info)
 
-	log.Println("Manger URL:  http://"+ witness.GetHttpHost() +
-			DEFAULT_INDEX_FULL +"?pass=" + witness.GetPass())
+	log.Println("Manger URL:  http://"+ witness.GetConfig().GetHttpHost() +
+			DEFAULT_INDEX_FULL +"?pass=" + witness.GetConfig().GetPass())
 }
 
 
@@ -80,10 +81,10 @@ func HandleFunc(path string, h func(Response, *Request, *Session)) {
 		log.Println("Service", r.URL)
 		//TODO: 登陆检查
 		s := sess.Start(w, r)
-		// if succ, err := s.GetBoolean("login"); !succ || err != nil {
-		// 	wjson(w, &Msg{ 1, "未登录", err })
-		// 	return
-		// }
+		if succ, err := s.GetBoolean("login"); !succ || err != nil {
+			wjson(w, &Msg{ 401, "未登录", err })
+			return
+		}
 		h(Response(w), (*Request)(r), (*Session)(s))
 	})
 }
@@ -143,7 +144,7 @@ func wjson(w http.ResponseWriter, m interface{}) {
 func login(w http.ResponseWriter, r *http.Request) {
 	pass := r.URL.Query().Get("pass")
 
-	if pass == witness.GetPass() {
+	if pass == witness.GetConfig().GetPass() {
 		s := sess.Start(w, r)
 		s.Set("login", true)
 		wjson(w, &Msg{ 0, "ok", nil })
@@ -247,4 +248,15 @@ func read_log(w Response, r *Request, s *Session) {
 	}
 	
 	wjson(w, &Msg{ 0, "ok", loglist })
+}
+
+
+func servier_info(w Response, r *Request, s *Session) {
+	c := witness.GetConfig()
+	wjson(w, &Msg{ 0, "ok", map[string]interface{}{
+		"id"   			: c.ID,
+		"host" 			: c.Host,
+		"xboson" 		: c.URLxBoson,
+		"publicKey" : witness.GetPublicKeyStr(),
+	} })
 }

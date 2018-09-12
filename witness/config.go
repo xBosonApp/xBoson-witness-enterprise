@@ -22,19 +22,23 @@ type Config struct {
 	URLxBoson 	string
 	ID          string
 	Pass        string
+	PrivateKeyRecv func(*ecdsa.PrivateKey)
 }
 
-func loadConfig() {
+func loadConfig(configFile string, recv func(*ecdsa.PrivateKey)) *Config {
+	c := new(Config)
+	c.PrivateKeyRecv = recv
+
 	flag.Parse()
-	log("Load config From:", *configFile)
-	file, err := os.Open(*configFile)
+	log("Load config From:", configFile)
+	file, err := os.Open(configFile)
 	if err != nil {
 		log(err)
-		setConfigFromUser()
-		genKey()
-		saveConfig()
-		genPass()
-		return
+		setConfigFromUser(c)
+		genKey(c)
+		genPass(c)
+		saveConfig(c, configFile)
+		return c
 	}
 	defer file.Close()
 
@@ -42,13 +46,15 @@ func loadConfig() {
 	err = dec.Decode(c)
 	if err != nil {
 		logger.Fatalln("Parse Config fail", err)
+		return nil
 	}
-	loadKey()
+	loadKey(c)
+	return c
 }
 
 
-func saveConfig() {
-	file, err := os.OpenFile(*configFile, os.O_RDWR|os.O_CREATE, 0700)
+func saveConfig(c *Config, configFile string) {
+	file, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
 		log("Open Config File fail", err)
 		return;
@@ -58,11 +64,11 @@ func saveConfig() {
 	enc := json.NewEncoder(file)
 	enc.SetIndent("", "  ")
 	enc.Encode(c)
-	log("Save config to", *configFile)
+	log("Save config to", configFile)
 }
 
 
-func setConfigFromUser() {
+func setConfigFromUser(c *Config) {
 	fmt.Print("Input Http Port: ");
 	fmt.Scanf("%d\n", &c.Port)
 	fmt.Print("Input xBoson platform Adderss, [host:port]: ");
@@ -74,7 +80,7 @@ func setConfigFromUser() {
 }
 
 
-func loadKey() {
+func loadKey(c *Config) {
 	bin, err := base64.StdEncoding.DecodeString(c.PrivateKey)
 	if err != nil {
 		logger.Fatalln("Decode Private Key fail")
@@ -83,17 +89,21 @@ func loadKey() {
 	if err != nil {
 		logger.Fatalln("Parse Private key fail")
 	}
-	setGlbKey(pri)
+	if c.PrivateKeyRecv != nil {
+		c.PrivateKeyRecv(pri)
+	}
 	log("Load Key from config file")
 }
 
 
-func genKey() {
+func genKey(c *Config) {
 	pri, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		logger.Fatalln("Cannot create key pair", err)
 	}
-	setGlbKey(pri)
+	if c.PrivateKeyRecv != nil {
+		c.PrivateKeyRecv(pri)
+	}
 	log("Generate New Key")
 
 	bin, err := x.MarshalECPrivateKey(pri)
@@ -117,18 +127,18 @@ func genKey() {
 }
 
 
-func genPass() {
+func genPass(c *Config) {
 	b := make([]byte, 10)
 	rand.Read(b)
 	c.Pass = base64.RawURLEncoding.EncodeToString(b)
 }
 
 
-func GetPass() string {
+func (c *Config) GetPass() string {
 	return c.Pass
 }
 
 
-func GetHttpHost() string {
+func (c *Config) GetHttpHost() string {
 	return c.Host +":"+ strconv.Itoa(c.Port)
 }

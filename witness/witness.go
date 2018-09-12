@@ -48,9 +48,7 @@ func StartWitnessProgram() {
 	defer CloseAllBlockDB()
 	ls := Logset{}
 	setLoggerFile(&ls)
-	c = new(Config)
-	
-	loadConfig()
+	c = loadConfig(*configFile, setGlbKey)
 
 	if c.Host != "" {
 		if !findIpWithConfig() {
@@ -114,7 +112,7 @@ func doReg() {
 
 	log("Register to xBoson Success ID=", ret.Id)
 	c.ID = ret.Id
-	saveConfig()
+	saveConfig(c, *configFile)
 }
 
 
@@ -299,4 +297,14 @@ func checkRelatedPutRequest(b map[string]interface{}, db *Blockdb) {
 		return
 	}
 	requestBlockChan <- BlockQuery{ pkey, db.chain, db.channel, block_count }
+}
+
+
+func GetConfig() (*Config) {
+	return c
+}
+
+
+func GetPublicKeyStr() string {
+	return pubkeystr;
 }

@@ -1,6 +1,7 @@
 jQuery(function($) {
 
 $('.smartform').each(smartForm);
+$("#server_info").each(get_server_info);
 var jlog = $("#log");
 
 if (jlog.length > 0) {
@@ -47,31 +48,30 @@ function listBlock(chainid, channelid) {
   requestBlocks();
 
   $("#next_page").off('click').click(function() {
-    p.key = next_key;
-    if (p.key) requestBlocks();
+    if (next_key) requestBlocks(next_key);
     return false;
   });
 
   $("#current_page").off('click').click(function() {
-    delete p.key;
     requestBlocks();
     return false;
   });
 
   $("#search_block").off('click').click(function() {
-    p.key = $("#input_key").val();
-    requestBlocks();
+    requestBlocks($("#input_key").val());
     return false;
   });
 
-  function requestBlocks() {
+  function requestBlocks(k, _over) {
+    p.key = k;
     list_content(block_select.root, 'get_block', p, function(li, a, v) {
-      a.html(v.key).attr('href', '#').click(function() {
-        showBlock(v);
+      a.html(v.key).attr('href', '#').attr('id', v.key).click(function() {
+        showBlock(v, requestBlocks, p);
         block_select.select(a);
         return false;
       });
       next_key = v.previousKey;
+      _over && _over();
     });
   }
 }
@@ -91,21 +91,37 @@ function selectGroup(root) {
 }
 
 
-function showBlock(block) {
+function showBlock(block, requestBlocksFunc, parm) {
   var root = $('#block_info ul').html("");
   root.closest("section").show();
   var mapping = {
-    create : { tr: tr_date },
-    sign   : { tr: tr_sign },
-    data   : { tr: tr_format_json },
-    type   : { tr: tr_type },
+    create        : { tr: tr_date },
+    sign          : { tr: tr_sign },
+    data          : { tr: tr_format_json },
+    type          : { tr: tr_type },
+    chaincodeKey  : { tr: tr_goto_block },
+    previousKey   : { tr: tr_goto_block },
   };
+
   for (var n in block) {
     var name = (mapping[n] && mapping[n].name) || n;
-    var val  = (mapping[n] && mapping[n].tr && mapping[n].tr(block[n])) || block[n];
-    var li = $("<li class='flex'>").appendTo(root);
-    li.append($("<div class='name'>").html(name));
-    li.append($("<div class='value'>").html(val));
+    var val;
+    if (mapping[n] && mapping[n].tr && block[n]) {
+      val = mapping[n].tr(block[n], _show_block) || block[n];
+    } else {
+      val = block[n];
+    }
+    if (name && val) {
+      var li = $("<li class='flex'>").appendTo(root);
+      li.append($("<div class='name'>").html(name));
+      li.append($("<div class='value'>").html(val));
+    }
+  }
+
+  function _show_block(key) {
+    requestBlocksFunc(key, function() {
+      $('#'+ key).click();
+    });
   }
 }
 
@@ -134,6 +150,15 @@ function tr_format_json(v) {
     console.log("base64", e);
     return v;
   }
+}
+
+
+function tr_goto_block(v, requestBlocksFunc) {
+  var a = $("<a href='#'>").html(v);
+  a.click(function() {
+    requestBlocksFunc(v);
+  });
+  return a;
 }
 
 
@@ -179,6 +204,8 @@ function call(api, parm, over) {
     success: function(ret) {
       if (ret.code == 0) {
         over(null, ret)
+      } else if (ret.code == 401) {
+        relogin();
       } else {
         log(ret.msg);
         over(new Error(ret.msg))
@@ -224,7 +251,7 @@ function startSysLogger() {
   var LOG_MAX_COUNT = 1000;
   var log_count = 0;
   __do();
-  
+
   function __do() {
     call('read_log', null, function(err, ret) {
       if (ret && ret.data) {
@@ -240,6 +267,23 @@ function startSysLogger() {
       setTimeout(__do, 100);
     });
   }
+}
+
+
+function relogin() {
+  location.href = '../'
+}
+
+
+function get_server_info() {
+  var thiz = $(this);
+  call('info', null, function(err, ret) {
+    if (ret && ret.data) {
+      for (var n in ret.data) {
+        thiz.find('[k="'+ n +'"]').html(ret.data[n]);
+      }
+    }
+  });
 }
 
 });

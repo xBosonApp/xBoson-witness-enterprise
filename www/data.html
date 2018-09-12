@@ -9,8 +9,32 @@
       <script src=".js"></script>
   </head>
   <body style='padding: 30px 60px;'>
-    <h1 style='border-bottom: 1px solid #111'>区块链</h1>
+    <h1 style='border-bottom: 1px solid #111'>见证者节点</h1>
   </body>
+
+  <ul id='server_info' class='content'>
+    <li class='flex'>
+      <div class='flex'>
+        <div class='name'>ID</div>
+        <div class='value' k='id'></div>
+      </div>
+      <div class='flex'>
+        <div class='name'>xBoson</div>
+        <div class='value' k='xboson'></div>
+      </div>
+    </li>
+
+    <li class='flex'>
+      <div class='flex'>
+        <div class='name'>Host</div>
+        <div class='value' k='host'></div>
+      </div>
+      <div class='flex'>
+        <div class='name'>Public Key</div>
+        <div class='value' k='publicKey'></div>
+      </div>
+    </li>
+  </ul>
 
   <div class='flex' style='min-height: 600px'>
     <div class='halfwidth'>
@@ -47,6 +71,9 @@
     </div>
   </div>
 
-  <div id='log'></div>
+  <div class='flex' style='margin-top: 40px;'>
+    <div class='logtitle'>区块日志</div>
+    <div id='log'></div>
+  </div>
 
 </html>

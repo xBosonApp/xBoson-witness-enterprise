@@ -14,7 +14,7 @@ func findIpWithStdin() {
 		fmt.Scanf("%c\n", &cf)
 		if cf == 'y' {
 			c.Host = ip.String()
-			saveConfig()
+			saveConfig(c, *configFile)
 			return true;
 		}
 		return false

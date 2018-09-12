@@ -8,6 +8,9 @@ const (
 	LOG_STACK_LEN = 99
 )
 
+//
+// 消息缓冲区队列, 当队列被填满, 旧的消息将被覆盖(删除)
+//
 type Message struct {
 	log_stack [LOG_STACK_LEN]*StackItem
 	log_safe sync.Mutex
@@ -22,6 +25,9 @@ type StackItem struct {
 }
 
 
+//
+// 发送消息
+//
 func (m *Message) Send(a ...interface{}) {
 	m.log_safe.Lock()
 	defer m.log_safe.Unlock()
@@ -35,6 +41,9 @@ func (m *Message) Send(a ...interface{}) {
 }
 
 
+//
+// 读取最新的消息, 没有新消息返回 nil
+//
 func (m *Message) Read() ([][]interface{}) {
 	m.log_safe.Lock()
 	defer m.log_safe.Unlock()
