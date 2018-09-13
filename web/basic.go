@@ -55,11 +55,11 @@ func StartWebService() {
   http.HandleFunc(base_service +"login", login)
   http.HandleFunc(base_service +"logout", logout)
 
-  HandleFunc("chain_list", 		chainList)
-  HandleFunc("channel_list", 	channelList)
-  HandleFunc("get_block", 		block)
-  HandleFunc("read_log", 			read_log)
-  HandleFunc("info",					servier_info)
+  HandleFunc("chain_list",    chainList)
+  HandleFunc("channel_list",  channelList)
+  HandleFunc("get_block",     block)
+  HandleFunc("read_log",      read_log)
+  HandleFunc("info",          servier_info)
 
   log.Println("Manger URL:  http://"+ witness.GetConfig().GetHttpHost() +
       DEFAULT_INDEX_FULL +"?pass=" + witness.GetConfig().GetPass())
