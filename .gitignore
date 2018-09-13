@@ -5,3 +5,4 @@ witness-config*.json
 blockdb
 block-db
 logs
+witness-enterprise

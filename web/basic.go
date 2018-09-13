@@ -34,9 +34,11 @@ type Msg struct {
 	Data interface{} 	`json:"data"`
 }
 
-type Response http.ResponseWriter
-type Request  http.Request
-type Session  sessions.Session
+type Http struct {
+  R  *http.Request
+  W  http.ResponseWriter
+  S  *sessions.Session
+}
 
 var file_mapping = make(map[string][]byte)
 var sess *sessions.Sessions;
@@ -76,7 +78,7 @@ func StartWebService() {
 //
 // 带有登陆检查
 //
-func HandleFunc(path string, h func(Response, *Request, *Session)) {
+func HandleFunc(path string, h func(h Http)) {
 	http.HandleFunc(base_service + path, func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Service", r.URL)
 		//TODO: 登陆检查
@@ -84,8 +86,8 @@ func HandleFunc(path string, h func(Response, *Request, *Session)) {
 		if succ, err := s.GetBoolean("login"); !succ || err != nil {
 			wjson(w, &Msg{ 401, "未登录", err })
 			return
-		}
-		h(Response(w), (*Request)(r), (*Session)(s))
+    }
+    h(Http{ r, w, s })
 	})
 }
 
@@ -141,6 +143,11 @@ func wjson(w http.ResponseWriter, m interface{}) {
 }
 
 
+func (h *Http) Json(m interface{}) {
+  wjson(h.W, m)
+}
+
+
 func login(w http.ResponseWriter, r *http.Request) {
 	pass := r.URL.Query().Get("pass")
 
@@ -161,12 +168,12 @@ func logout(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func chainList(w Response, r *Request, s *Session) {
+func chainList(h Http) {
 	all := make([]string, 0, 10)
 	fileinfo , err := ioutil.ReadDir(witness.DB_PATH)
 
 	if err != nil {
-		wjson(w, &Msg{ 1, "失败"+ err.Error(), nil })
+		wjson(h.W, &Msg{ 1, "失败"+ err.Error(), nil })
 		return
 	}
 
@@ -176,39 +183,39 @@ func chainList(w Response, r *Request, s *Session) {
 			all = append(all, name)
 		}
 	}
-	wjson(w, &Msg{ 0, "ok", all })
+	wjson(h.W, &Msg{ 0, "ok", all })
 }
 
 
-func channelList(w Response, r *Request, s *Session) {
-	chain := r.URL.Query().Get("chain")
+func channelList(h Http) {
+	chain := h.R.URL.Query().Get("chain")
 	db, err := db.OpenDB(witness.DB_PATH + chain)
 	defer db.Close()
 
 	if err != nil {
-		wjson(w, &Msg{ 1, err.Error(), nil })
+		wjson(h.W, &Msg{ 1, err.Error(), nil })
 		return
 	}
 	all := db.AllCols()
-	wjson(w, &Msg{ 0, "ok", all })
+	wjson(h.W, &Msg{ 0, "ok", all })
 }
 
 
-func block(w Response, r *Request, s *Session) {
-	chain   := r.URL.Query().Get("chain")
-	channel := r.URL.Query().Get("channel")
-	key     := r.URL.Query().Get("key")
+func block(h Http) {
+	chain   := h.R.URL.Query().Get("chain")
+	channel := h.R.URL.Query().Get("channel")
+	key     := h.R.URL.Query().Get("key")
 
 	db, err := witness.OpenBlockDB(chain, channel)
 	if err != nil {
-		wjson(w, &Msg{ 1, err.Error(), nil })
+		wjson(h.W, &Msg{ 1, err.Error(), nil })
 		return
 	}
 
 	if key == "" {
 		k, err := db.GetLastKey();
 		if err != nil {
-			wjson(w, &Msg{ 2, err.Error(), nil })
+			h.Json(&Msg{ 2, err.Error(), nil })
 			return
 		}
 		key = *k
@@ -219,7 +226,7 @@ func block(w Response, r *Request, s *Session) {
 	for i:=0; i<count; i++ {
 		b, err := db.Get(key)
 		if err != nil {
-			wjson(w, &Msg{ 3, err.Error(), nil })
+			h.Json(&Msg{ 3, err.Error(), nil })
 			return
 		}
 		if b == nil {
@@ -229,15 +236,14 @@ func block(w Response, r *Request, s *Session) {
 		all = append(all, b)
 		key = b["previousKey"].(string)
 	}
-	wjson(w, &Msg{ 0, "ok", all })
+	h.Json(&Msg{ 0, "ok", all })
 }
 
 
-func read_log(w Response, r *Request, s *Session) {
-	var ss = (*sessions.Session)(s)
+func read_log(h Http) {
 	var loglist [][]interface{}
 	end := time.Now().Add(10 * time.Second)
-	rc, _ := ss.GetInt("rc")
+	rc, _ := h.S.GetInt("rc")
 
 	//
 	// 10秒内如果没有消息就返回 null, 否则立即返回记录, 或等待10秒
@@ -250,14 +256,14 @@ func read_log(w Response, r *Request, s *Session) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	
-	ss.Set("rc", rc)
-	wjson(w, &Msg{ 0, "ok", loglist })
+	h.S.Set("rc", rc)
+	h.Json(&Msg{ 0, "ok", loglist })
 }
 
 
-func servier_info(w Response, r *Request, s *Session) {
+func servier_info(h Http) {
 	c := witness.GetConfig()
-	wjson(w, &Msg{ 0, "ok", map[string]interface{}{
+	h.Json(&Msg{ 0, "ok", map[string]interface{}{
 		"id"   			: c.ID,
 		"host" 			: c.Host,
 		"xboson" 		: c.URLxBoson,
