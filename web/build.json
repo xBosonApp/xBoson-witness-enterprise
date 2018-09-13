@@ -1,0 +1,7 @@
+{
+  "packageName": "witness_web",
+  "fileName": "resource_www.go",
+  "wwwDir": "../www",
+  "outDir": ".",
+  "varName": "file_mapping"
+}

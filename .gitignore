@@ -7,3 +7,4 @@ block-db
 logs
 witness-enterprise
 .vscode
+web/resource_www.go

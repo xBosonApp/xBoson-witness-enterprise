@@ -3,6 +3,11 @@
 go1.10.1 或更高版本编译:
 
 ```sh
+# 可选: 编译静态文件为程序资源, 发布时不依赖 www 目录;
+# 开发时删除 `web/resource_www.go` 文件;
+# nodejs > version 6
+node web/build
+
 go get github.com/HouzuoGuo/tiedot
 go get github.com/kataras/go-sessions
 go get github.com/gorilla/securecookie
