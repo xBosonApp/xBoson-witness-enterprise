@@ -36,7 +36,7 @@ ul {
   padding: 5px 0
 }
 li {
-  list-style-type: none; border-bottom: 1px solid #ddd;
+  list-style-type: none; padding-left: 1px;
 }
 a {
   text-decoration: none; color: #777;
@@ -65,9 +65,14 @@ li a {
 .sign_ct {
   margin-bottom: 9px; 
 }
+h1 {
+  border-bottom: 1px solid #111; padding-bottom: 6px;
+}
 h2 {
   margin: 50px 0 10px 0; padding: 8px 50px;
-  border-radius: 5px; background: #9c7438; color: #fff; font-size: 15px;
+  border-radius: 5px; background: #1a5796; color: #fff; font-size: 15px;
+  box-shadow:3px 3px 6px #295f96;
+  background: linear-gradient(to right, #15406d, #1c76d2);
 }
 .content {
   padding-left: 50px;
@@ -97,4 +102,10 @@ h2 {
 #logout {
   font-size: 8px;
   float: right;
+}
+.even {
+  background: #dbedff;
+}
+#server_info li {
+  border-bottom: 1px solid #ddd;
 }

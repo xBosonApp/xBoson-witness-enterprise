@@ -104,6 +104,7 @@ function showBlock(block, requestBlocksFunc, parm) {
     previousKey   : { tr: tr_goto_block },
   };
 
+  var i = 0;
   for (var n in block) {
     var name = (mapping[n] && mapping[n].name) || n;
     var val;
@@ -115,6 +116,10 @@ function showBlock(block, requestBlocksFunc, parm) {
     
     if (name && val) {
       var li = $("<li class='flex'>").appendTo(root);
+      if (i%2 != 0) {
+        li.addClass('even');
+      }
+      ++i;
       li.append($("<div class='name'>").html(name));
       li.append($("<div class='value'>").html(val));
     }
@@ -192,9 +197,12 @@ function list_content(jroot, api, parm, _every_li, _over) {
     if (err) return (_over && _over(err));
     jroot.html("")
 
-    ret.data.forEach(function(v) {
+    ret.data.forEach(function(v, i) {
       var a = $("<a>").html(v);
       var li = $("<li>").append(a);
+      if (i%2!=0) {
+        li.addClass('even');
+      }
       _every_li && _every_li(li, a, v);
       jroot.append(li);
     });
