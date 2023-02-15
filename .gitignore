@@ -8,3 +8,4 @@ logs
 witness-enterprise
 .vscode
 web/resource_www.go
+build/**

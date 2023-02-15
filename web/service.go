@@ -4,7 +4,7 @@ import (
   "io/ioutil"
   "github.com/HouzuoGuo/tiedot/db"
   "net/http"
-  "../witness"
+  "witness-enterprise/witness"
   "time"
 )
 

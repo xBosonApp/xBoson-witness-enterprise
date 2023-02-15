@@ -9,7 +9,7 @@ import (
   "encoding/json"
   "github.com/kataras/go-sessions"
   "github.com/gorilla/securecookie"
-  "../witness"
+  "witness-enterprise/witness"
 )
 
 const (
